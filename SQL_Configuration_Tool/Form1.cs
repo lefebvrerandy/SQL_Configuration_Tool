@@ -7,179 +7,134 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Configuration;
+using System.Data.SqlClient;
+using System.Reflection;
 
 namespace SQL_Configuration_Tool
 {
     public partial class Form1 : Form
     {
         DataFields df = new DataFields();
+
         public Form1()
         {
             InitializeComponent();
-            PopulateComboBox();
-            HideErrorLabels();
-            InitiateEventHandlers();
+            LoadConnectionString();
         }
 
-        private void InitiateEventHandlers()
-        {
-            // Event Handler list
-            // Event Handler for text field bin capacity
-            tb_bin.LostFocus +=
-                new System.EventHandler(BinCapacityLostFocus);
-            // Event Handler for text field refill bin
-            tb_refill.LostFocus +=
-                new System.EventHandler(RefillBinLostFocus);
-            // Event Handler for text field time scale
-            tb_time.LostFocus +=
-                new System.EventHandler(TimeScaleLostFocus);
-            // Event Handler for combo box skill
-            cb_skill.SelectedIndexChanged +=
-                new System.EventHandler(ComboBoxSelectionChanged);
+        //  /////////////////////////////////////////////////////////////////////////////////////
+        //                              EVENT HANDLERS
+        //  /////////////////////////////////////////////////////////////////////////////////////
 
-        }
 
-        private void BinCapacityLostFocus(object sender, EventArgs e)   // Need to add the ability to lock characters from text fields
-        {
-            // Validate
-            var converted = 0;
-            try
-            {
-                converted = Int32.Parse(tb_bin.Text);
-            }
-            catch (Exception)
-            {
-                converted = -1;
-            }
-            if ((converted <= 0) || (converted > 20))
-            {
-                lb_bin.Visible = true;
-            }
-            else
-            {
-                lb_bin.Hide();
-                df.BinCapacity = converted;
-            }
-        }
 
-        private void RefillBinLostFocus(object sender, EventArgs e)
-        {
-            // Validate
-            var converted = 0;
-            try
-            {
-                converted = Int32.Parse(tb_refill.Text);
-            }
-            catch (Exception)
-            {
-                converted = -1;
-            }
-            if ((converted <= 0 ) || (converted > 10))
-            {
-                lb_refill.Visible = true;
-            }
-            else
-            {
-                lb_refill.Hide();
-                df.RefillRate = converted;
-            }
-        }
 
-        private void TimeScaleLostFocus(object sender, EventArgs e)
-        {
-            // Validate
-            var converted = 0;
-            try
-            {
-                converted = Int32.Parse(tb_time.Text);
-            }
-            catch (Exception)
-            {
-                converted = -1;
-            }
-            if ((converted <= 0) || (converted > 10))
-            {
-                lb_time.Visible = true;
-            }
-            else
-            {
-                lb_time.Hide();
-                df.TimeScale = converted;
-            }
-        }
-
-        private void ComboBoxSelectionChanged(object sender, EventArgs e)
-        {
-            // Validate
-            if ((cb_skill.SelectedIndex <= -1) )
-            {
-                lb_skill.Visible = true;
-            }
-            else
-            {
-                lb_skill.Hide();
-                df.EmployeeSkillImpact = cb_skill.SelectedItem.ToString();
-            }
-        }
-
-        void PopulateComboBox()
-        {
-            // Load the information in the combo box
-            cb_skill.Items.Add("rookie");
-            cb_skill.Items.Add("average");
-            cb_skill.Items.Add("experienced");
-        }
 
         /// <summary>
-        /// Hide all labels. Called at the start of the programs life cycle
-        /// just to hide all the validation labels.
+        /// This method handles the button click event. It will check to see that
+        /// the DataField instance has information in all its properties. If so, it will
+        /// create a DataTable will all the fields in it to insert it into a SQL server table.
         /// </summary>
-        void HideErrorLabels()
-        {
-            lb_bin.Hide();
-            lb_refill.Hide();
-            lb_skill.Hide();
-            lb_time.Hide();
-        }
-
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btn_store_Click(object sender, EventArgs e)
         {
-            // Check DataFields instance for filled information.
-            // If properties in the Datafield instance is all filled,
-            // we want to turn it into a datatable for 
-
-            // Validate
-            bool isValid = false;
-            if ((df.BinCapacity != -1) && (df.RefillRate != -1) && (df.TimeScale != -1) && (df.EmployeeSkillImpact != ""))
+            using (SqlConnection db = new SqlConnection(df.connectionString))
             {
-                isValid = true;
-            }
+                DataTable dataTableFirst = new DataTable();
+                DataTable dataTableSecond = new DataTable();
+                DataTable dataTableThird = new DataTable();
+                DataTable dataTableFourth = new DataTable();
 
-            // Create Table
-            if (isValid)
-            {
-                DataTable dt = CreateDataTable();
-            }
+                // Create the query string
+                string query = "SELECT * FROM dbo.Configuration_Table WHERE [Key] = 'TimeScale' OR [Key] = 'RefillRate'";
 
-            // Insert Table
-            if (isValid)
-            {
-                //InsertTable(dt);
+                using (SqlCommand cmd = new SqlCommand(query, db))
+                {
+                    db.Open();
+                    cmd.Connection = db;
+                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                    {
+                        // this will query your database and return the result to your datatable
+                        da.Fill(dataTableFirst);
+                        dataGridView1.DataSource = dataTableFirst;
+                        dataGridView1.AutoResizeColumns(
+                            DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
+                    }
+                }
+
+                query = "SELECT * FROM dbo.Configuration_Table WHERE [Key] = 'RookieDefectRate' OR [Key] = 'NormalDefectRate' OR [Key] = 'SuperDefecrRate'";
+                using (SqlCommand cmd = new SqlCommand(query, db))
+                {
+                    cmd.Connection = db;
+                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                    {
+                        // this will query your database and return the result to your datatable
+                        da.Fill(dataTableSecond);
+                        dataGridView2.DataSource = dataTableSecond;
+                        dataGridView2.AutoResizeColumns(
+                            DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
+                    }
+                }
+
+                //using (SqlCommand cmd = new SqlCommand(query, db))
+                //{
+                //    db.Open();
+                //    cmd.Connection = db;
+                //    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                //    {
+                //        // this will query your database and return the result to your datatable
+                //        da.Fill(dt);
+                //        dataGridView1.DataSource = dt;
+                //        dataGridView1.AutoResizeColumns(
+                //            DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
+                //    }
+                //}
+
+                //using (SqlCommand cmd = new SqlCommand(query, db))
+                //{
+                //    db.Open();
+                //    cmd.Connection = db;
+                //    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                //    {
+                //        // this will query your database and return the result to your datatable
+                //        da.Fill(dt);
+                //        dataGridView1.DataSource = dt;
+                //        dataGridView1.AutoResizeColumns(
+                //            DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
+                //    }
+                //}
             }
         }
 
-        private DataTable CreateDataTable()
-        {
-                // Here we create a DataTable with four columns.
-                DataTable table = new DataTable();
-                table.Columns.Add("Bin Capacity", typeof(int));
-                table.Columns.Add("Refill Rate", typeof(int));
-                table.Columns.Add("Time Scale", typeof(int));
-                table.Columns.Add("Employee Skill Impact", typeof(string));
+        //  /////////////////////////////////////////////////////////////////////////////////////
+        //                      INITIALIZE AND POPULATE
+        //  /////////////////////////////////////////////////////////////////////////////////////
 
-                // Here we add five DataRows.
-                table.Rows.Add(df.BinCapacity, df.RefillRate, df.TimeScale, df.EmployeeSkillImpact);
-                return table;
+        /// <summary>
+        /// Load and test the connection string. This will alter the label at the beginning
+        /// of the programs execution. If the connection is successful, we will show the connection status.
+        /// If no connection, it will disable the button and show how to fix the error.
+        /// </summary>
+        private void LoadConnectionString()
+        {
+            df.connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString;
+            try
+            {
+                using (SqlConnection db = new SqlConnection(df.connectionString))
+                {
+                    db.Open();
+                    lbl_connection.Text = "Connection to Server Successful";
+                    lbl_connection.ForeColor = Color.Green;
+                }
+            }
+            catch (Exception)
+            {
+                lbl_connection.Text = "No connection to server.\nCheck App.Config \nConnection String";
+                lbl_connection.ForeColor = Color.Red;
+                btn_store.Enabled = false;
+            }
         }
     }
 }
