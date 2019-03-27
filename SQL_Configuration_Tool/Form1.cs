@@ -46,6 +46,10 @@ namespace SQL_Configuration_Tool
                 DataTable dataTableSecond = new DataTable();
                 DataTable dataTableThird = new DataTable();
                 DataTable dataTableFourth = new DataTable();
+                dataGridView1.ScrollBars = ScrollBars.None;
+                dataGridView2.ScrollBars = ScrollBars.None;
+                dataGridView3.ScrollBars = ScrollBars.None;
+                dataGridView4.ScrollBars = ScrollBars.None;
 
                 // Create the query string
                 string query = "SELECT * FROM dbo.Configuration_Table WHERE [Key] = 'TimeScale' OR [Key] = 'RefillRate'";
@@ -64,7 +68,7 @@ namespace SQL_Configuration_Tool
                     }
                 }
 
-                query = "SELECT * FROM dbo.Configuration_Table WHERE [Key] = 'RookieDefectRate' OR [Key] = 'NormalDefectRate' OR [Key] = 'SuperDefecrRate'";
+                query = "SELECT * FROM dbo.Configuration_Table WHERE [Key] = 'RookieDefectRate' OR [Key] = 'NormalDefectRate' OR [Key] = 'SuperDefectRate'";
                 using (SqlCommand cmd = new SqlCommand(query, db))
                 {
                     cmd.Connection = db;
@@ -78,33 +82,33 @@ namespace SQL_Configuration_Tool
                     }
                 }
 
-                //using (SqlCommand cmd = new SqlCommand(query, db))
-                //{
-                //    db.Open();
-                //    cmd.Connection = db;
-                //    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
-                //    {
-                //        // this will query your database and return the result to your datatable
-                //        da.Fill(dt);
-                //        dataGridView1.DataSource = dt;
-                //        dataGridView1.AutoResizeColumns(
-                //            DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
-                //    }
-                //}
+                query = "SELECT * FROM dbo.Configuration_Table WHERE [Key] = 'RookieBuildRate' OR [Key] = 'NormalBuildRate' OR [Key] = 'SuperBuildRate'";
+                using (SqlCommand cmd = new SqlCommand(query, db))
+                {
+                    cmd.Connection = db;
+                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                    {
+                        // this will query your database and return the result to your datatable
+                        da.Fill(dataTableThird);
+                        dataGridView3.DataSource = dataTableThird;
+                        dataGridView3.AutoResizeColumns(
+                            DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
+                    }
+                }
 
-                //using (SqlCommand cmd = new SqlCommand(query, db))
-                //{
-                //    db.Open();
-                //    cmd.Connection = db;
-                //    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
-                //    {
-                //        // this will query your database and return the result to your datatable
-                //        da.Fill(dt);
-                //        dataGridView1.DataSource = dt;
-                //        dataGridView1.AutoResizeColumns(
-                //            DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
-                //    }
-                //}
+                query = "SELECT * FROM dbo.Configuration_Table WHERE [Key] = 'BinHarness' OR [Key] = 'BinHousing' OR [Key] = 'BinLens' OR [Key] = 'BinBulb' OR [Key] = 'BinBezel'";
+                using (SqlCommand cmd = new SqlCommand(query, db))
+                {
+                    cmd.Connection = db;
+                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                    {
+                        // this will query your database and return the result to your datatable
+                        da.Fill(dataTableFourth);
+                        dataGridView4.DataSource = dataTableFourth;
+                        dataGridView4.AutoResizeColumns(
+                            DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
+                    }
+                }
             }
         }
 
